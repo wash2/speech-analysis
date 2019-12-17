@@ -33,18 +33,6 @@ Analyser::Analyser()
 
     // Initialize the audio frames to zero.
     x.setZero(512);
-    
-    setInputDevice(Pa_GetDefaultInputDevice());
-}
-
-void Analyser::startThread() {
-    running.store(true);
-    thread = std::thread(&Analyser::mainLoop, this);
-}
-
-void Analyser::stopThread() {
-    running.store(false);
-    thread.join();
 }
 
 void Analyser::toggle() {
@@ -53,24 +41,6 @@ void Analyser::toggle() {
 
 bool Analyser::isAnalysing() const {
     return doAnalyse;
-}
-
-void Analyser::setInputDevice(int id) {
-    std::lock_guard<std::mutex> guard(audioLock);
-    audioCapture.closeStream();
-    audioCapture.openInputDevice(id);
-    fs = audioCapture.getSampleRate();
-    x.setZero(CAPTURE_SAMPLE_COUNT(fs));
-    audioCapture.startStream();
-}
-
-void Analyser::setOutputDevice(int id) {
-    std::lock_guard<std::mutex> guard(audioLock);
-    audioCapture.closeStream();
-    audioCapture.openOutputDevice(id);
-    fs = audioCapture.getSampleRate();
-    x.setZero(CAPTURE_SAMPLE_COUNT(fs));
-    audioCapture.startStream();
 }
 
 void Analyser::setFftSize(int _nfft) {

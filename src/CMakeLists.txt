@@ -1,20 +1,14 @@
 cmake_minimum_required(VERSION 3.0)
 project(main)
+cmake_policy(SET CMP0074 NEW)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-fopenmp -fext-numeric-literals")
+set(CMAKE_CXX_FLAGS "-static")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s -g")
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
-
 set(SOURCES
-        main.cpp
-        Exceptions.cpp
-        Exceptions.h
         analysis/Analyser_mainLoop.cpp
         analysis/Analyser.cpp
         analysis/Analyser.h
@@ -26,45 +20,23 @@ set(SOURCES
         analysis/parts/resample.cpp
         analysis/parts/spectrum.cpp
         audio/AudioCapture.cpp
-        audio/AudioCapture_callbacks.cpp
-        audio/AudioDevices.cpp
-        audio/AudioDevices.h
+        audio/AudioCapture.h
         audio/RingBuffer.cpp
-        audio/RingBuffer.h
-        gui/canvas/AnalyserCanvas.cpp
-        gui/canvas/AnalyserCanvas.h
-        gui/qt/MainWindow.cpp
-        gui/qt/MainWindow.h)
-
-set(QT_SOURCES
-       ../resources.qrc)
+        audio/RingBuffer.h)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(PortAudio REQUIRED)
-find_package(FFTW REQUIRED DOUBLE_LIB)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-
-set(OpenGL_GL_PREFERENCE GLVND)
-find_package(OpenGL REQUIRED)
+find_package(FFTW3 REQUIRED DOUBLE_LIB)
 
 include_directories(
         ${EIGEN_INCLUDE_DIR}
-        ${PORTAUDIO_INCLUDE_DIRS}
-        ${Qt5Widgets_INCLUDE_DIRS}
-        ${OPENGL_INCLUDE_DIRS}
+        ${FFTW3_INCLUDE_DIRS}
         ${libspeech_INCLUDE_DIR}
 )
 
-add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
+add_library(speech_analysis ${SOURCES})
 
 target_link_libraries(speech_analysis
         ${libspeech_LIBRARY}
         Eigen3::Eigen
-        ${PORTAUDIO_LIBRARIES}
-        ${FFTW_LIBRARIES}
-        Qt5::Widgets
-        OpenGL::GL)
+        ${FFTW3_LIBRARIES})
 
-if (WIN32)
-add_custom_command (TARGET speech_analysis POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::QWindowsIntegrationPlugin> $<TARGET_FILE_DIR:speech_analysis>)
-endif()

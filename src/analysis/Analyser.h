@@ -5,13 +5,12 @@
 #ifndef SPEECH_ANALYSIS_ANALYSER_H
 #define SPEECH_ANALYSIS_ANALYSER_H
 
-#include <QColor>
 #include <Eigen/Core>
 #include <deque>
 #include <thread>
 #include <memory>
 #include "../audio/AudioCapture.h"
-#include "../lib/Formant/Formant.h"
+#include "Formant/Formant.h"
 
 struct SpecFrame {
     double fs;
@@ -23,13 +22,7 @@ class Analyser {
 public:
     Analyser();
 
-    void startThread();
-    void stopThread();
-
     void toggle();
-    
-    void setInputDevice(int id);
-    void setOutputDevice(int id);
 
     void setSpectrum(bool);
     void setFftSize(int);
@@ -61,8 +54,7 @@ public:
 private:
     void _updateFrameCount();
 
-    void mainLoop();
-    void update();
+    void update(AudioCapture & audioCapture);
     void applyWindow();
     void analyseSpectrum();
     void analysePitch();
@@ -72,9 +64,6 @@ private:
     void analyseFormantLp();
     void analyseFormantDeep();
     void applyMedianFilters();
-
-    std::mutex audioLock;
-    AudioCapture audioCapture;
 
     std::function<void()> newFrameCallback;
 
