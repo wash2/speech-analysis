@@ -6,6 +6,7 @@
 #define SPEECH_ANALYSIS_ANALYSER_H
 
 #include <Eigen/Core>
+#include <emscripten/val.h>
 #include <deque>
 #include <thread>
 #include <memory>
@@ -51,10 +52,11 @@ public:
 
     void setFrameCallback(std::function<void()> callback);
 
+    void update(emscripten::val data, int sampleRate);
+
 private:
     void _updateFrameCount();
 
-    void update(AudioCapture & audioCapture);
     void applyWindow();
     void analyseSpectrum();
     void analysePitch();

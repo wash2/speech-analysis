@@ -10,15 +10,19 @@
 
 using namespace Eigen;
 
-void Analyser::update(AudioCapture & audioCapture)
+void Analyser::update(emscripten::val data, int sampleRate)
 {
     if (!doAnalyse) {
         return;
     }
 
     // Read captured audio.
-    audioCapture.readBlock(x);
-    fs = audioCapture.getSampleRate();
+    int length = data["length"].as<int>();
+    x.conservativeResize(length);
+    for (int i = 0; i < length; ++i) {
+        x(i) = data[i].as<double>();
+    }
+    fs = sampleRate;
 
     // Remove DC by subtraction of the mean.
     x -= x.mean();

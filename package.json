@@ -1,0 +1,47 @@
+{
+  "name": "speech-analysis",
+  "version": "1.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^4.3.2",
+    "@material-ui/icons": "^4.2.1",
+    "@material-ui/lab": "^4.0.0-alpha.23",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "react-scripts": "3.0.1"
+  },
+  "scripts": {
+    "start": "monkey-react-scripts start",
+    "build": "monkey-react-scripts build",
+    "test": "monkey-react-scripts test",
+    "eject": "monkey-react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.6.2",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/plugin-syntax-import-meta": "^7.2.0",
+    "@babel/preset-env": "^7.6.2",
+    "@open-wc/webpack-import-meta-loader": "^0.3.1",
+    "babel-loader": "8.0.5",
+    "copy-webpack-plugin": "^5.0.4",
+    "exports-loader": "^0.7.0",
+    "file-loader": "^4.2.0",
+    "monkey-react-scripts": "0.2.1",
+    "source-map-loader": "^0.2.4"
+  }
+}

@@ -6,6 +6,7 @@
 #define SPEECH_ANALYSIS_AUDIOCAPTURE_H
 
 #include <Eigen/Core>
+#include <emscripten/val.h>
 #include "RingBuffer.h"
 
 #define CAPTURE_DURATION 35.0
@@ -17,16 +18,17 @@ class AudioCapture {
 public:
     AudioCapture(int sampleRate);
 
-    void process(uintptr_t inputPtr, unsigned length, unsigned channelCount);
+    void process(uintptr_t inputPtr, int length, int channelCount);
 
     [[nodiscard]]
-    int getSampleRate() const noexcept;
+    int getSampleRate();
 
-    void readBlock(Eigen::ArrayXd & capture) noexcept;
+    void readBlock(emscripten::val data);
 
 private:
     RingBuffer audioBuffer;
 
+    Eigen::ArrayXd capture;
     int sampleRate;
 
 };

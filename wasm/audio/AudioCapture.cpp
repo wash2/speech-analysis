@@ -11,7 +11,7 @@ AudioCapture::AudioCapture(int sampleRate)
 {
 }
 
-void AudioCapture::process(uintptr_t inputPtr, unsigned length, unsigned channelCount)
+void AudioCapture::process(uintptr_t inputPtr, int length, int channelCount)
 {
     float * input = reinterpret_cast<float *>(inputPtr);
 
@@ -26,12 +26,15 @@ void AudioCapture::process(uintptr_t inputPtr, unsigned length, unsigned channel
     audioBuffer.writeInto(inputMean);
 }
 
-int AudioCapture::getSampleRate() const noexcept {
+int AudioCapture::getSampleRate() {
     return sampleRate;
 }
 
-void AudioCapture::readBlock(Eigen::ArrayXd & capture) noexcept {
+void AudioCapture::readBlock(emscripten::val data) {
     capture.conservativeResize(CAPTURE_SAMPLE_COUNT(sampleRate));
     audioBuffer.readFrom(capture);
+    
+    for (int i = 0; i < capture.size(); ++i) {
+        data.set(i, capture(i));
+    }
 }
-
