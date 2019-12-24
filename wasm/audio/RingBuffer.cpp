@@ -14,8 +14,6 @@ RingBuffer::RingBuffer(int capacity)
 
 void RingBuffer::writeInto(const ArrayXd & in)
 {
-    std::lock_guard<std::mutex> lock(mut);
-
     const int toWrite = in.size();
     const int tailCount = capacity - writeCursor;
 
@@ -36,8 +34,6 @@ void RingBuffer::writeInto(const ArrayXd & in)
 
 void RingBuffer::readFrom(ArrayXd & out)
 {
-    std::lock_guard<std::mutex> lock(mut);
-
     const int toRead = out.size();
     const int toReadRoundedUp = (1 + (toRead / capacity)) * capacity;
 
@@ -59,8 +55,6 @@ void RingBuffer::readFrom(ArrayXd & out)
 
 void RingBuffer::setCapacity(int newCapacity)
 {
-    std::lock_guard<std::mutex> lock(mut);
-
     capacity = newCapacity;
     data.resize(capacity, 0.0);
     writeCursor = 0;

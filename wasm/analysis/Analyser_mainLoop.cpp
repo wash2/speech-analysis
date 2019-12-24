@@ -2,6 +2,7 @@
 // Created by rika on 16/11/2019.
 //
 
+#include <iostream>
 #include <chrono>
 #include "Analyser.h"
 #include "Pitch/Pitch.h"
@@ -31,7 +32,7 @@ void Analyser::update(emscripten::val data, int sampleRate)
     applyWindow();
 
     // Analyse spectrum if enabled.
-    analyseSpectrum();
+    //analyseSpectrum();
 
     // Resample audio.
     resampleAudio(2 * maximumFrequency);
@@ -48,9 +49,6 @@ void Analyser::update(emscripten::val data, int sampleRate)
     // Perform formant analysis from LP coefficients.
     analyseFormantLp();
 
-    // Lock the tracks to prevent data race conditions.
-    mutex.lock();
-
     // Update the tracks.
     spectra.pop_front();
     spectra.push_back(lastSpectrumFrame);
@@ -61,10 +59,4 @@ void Analyser::update(emscripten::val data, int sampleRate)
     
     // Smooth out the tracks.
     applyMedianFilters();
-    
-    // Unock the tracks.
-    mutex.unlock();
-
-    // Invoke the new-frame callback function.
-    newFrameCallback();
 }

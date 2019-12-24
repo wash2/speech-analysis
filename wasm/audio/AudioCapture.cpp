@@ -15,6 +15,10 @@ void AudioCapture::process(uintptr_t inputPtr, int length, int channelCount)
 {
     float * input = reinterpret_cast<float *>(inputPtr);
 
+    Eigen::ArrayXd x = Eigen::Map<Eigen::ArrayXf>(input, length).cast<double>();
+    audioBuffer.writeInto(x);
+
+    /*
     Eigen::ArrayXXf inputData(channelCount, length);
     for (unsigned ch = 0; ch < channelCount; ++ch) {
         for (unsigned i = 0; i < length; ++i) {
@@ -22,8 +26,8 @@ void AudioCapture::process(uintptr_t inputPtr, int length, int channelCount)
         }
     }
 
-    Eigen::ArrayXd inputMean = inputData.rowwise().mean().cast<double>();
-    audioBuffer.writeInto(inputMean);
+    Eigen::ArrayXd inputMean = inputData.colwise().mean().cast<double>();
+    audioBuffer.writeInto(inputMean);*/
 }
 
 int AudioCapture::getSampleRate() {
@@ -31,10 +35,15 @@ int AudioCapture::getSampleRate() {
 }
 
 void AudioCapture::readBlock(emscripten::val data) {
-    capture.conservativeResize(CAPTURE_SAMPLE_COUNT(sampleRate));
+    const int length = CAPTURE_SAMPLE_COUNT(sampleRate);
+    capture.conservativeResize(length);
     audioBuffer.readFrom(capture);
-    
-    for (int i = 0; i < capture.size(); ++i) {
-        data.set(i, capture(i));
+
+    for (int i = 0; i < length; ++i) {
+        const double y = capture(i);
+        if (std::isnormal(y))
+            data.set(i, y);
+        else
+            data.set(i, 0);
     }
 }

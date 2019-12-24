@@ -24,9 +24,7 @@ Analyser::Analyser()
       lpOrder(10),
       maximumFrequency(5000.0),
       frameSpace(10.0),
-      windowSpan(5.0),
-      running(false),
-      newFrameCallback([](){})
+      windowSpan(5.0)
 {
     frameCount = 0;
     _updateFrameCount();
@@ -86,57 +84,37 @@ const std::chrono::duration<double> & Analyser::getWindowSpan() const {
 }
 
 int Analyser::getFrameCount() {
-    std::lock_guard<std::mutex> lock(mutex);
-
     return frameCount;
 }
 
 const SpecFrame & Analyser::getSpectrumFrame(int _iframe) {
-    std::lock_guard<std::mutex> lock(mutex);
-
     int iframe = std::clamp(_iframe, 0, frameCount - 1);
     return spectra.at(iframe);
 }
 
 const SpecFrame & Analyser::getLastSpectrumFrame() {
-    std::lock_guard<std::mutex> lock(mutex);
-
     return spectra.back();
 }
 
 const Formant::Frame & Analyser::getFormantFrame(int _iframe) {
-    std::lock_guard<std::mutex> lock(mutex);
-
     int iframe = std::clamp(_iframe, 0, frameCount - 1);
     return formantTrack.at(iframe);
 }
 
 const Formant::Frame & Analyser::getLastFormantFrame() {
-    std::lock_guard<std::mutex> lock(mutex);
-
     return formantTrack.back();
 }
 
 double Analyser::getPitchFrame(int _iframe) {
-    std::lock_guard<std::mutex> lock(mutex);
-
     int iframe = std::clamp(_iframe, 0, frameCount - 1);
     return pitchTrack.at(iframe);
 }
 
 double Analyser::getLastPitchFrame() {
-    std::lock_guard<std::mutex> lock(mutex);
-
     return pitchTrack.back();
 }
 
-void Analyser::setFrameCallback(std::function<void()> callback) {
-    newFrameCallback = callback;
-}
-
 void Analyser::_updateFrameCount() {
-    std::lock_guard<std::mutex> lock(mutex);
-
     const int newFrameCount = (1000 * windowSpan.count()) / frameSpace.count();
 
     if (frameCount < newFrameCount) {

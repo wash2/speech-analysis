@@ -10,6 +10,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s -g")
 
 set(ANALYSER_SOURCES
         analysis/Analyser_mainLoop.cpp
+        analysis/Analyser_get.cpp
         analysis/Analyser.cpp
         analysis/Analyser.h
         analysis/parts/formants.cpp
@@ -48,7 +49,10 @@ target_link_libraries(speech_analysis
         ${FFTW3_LIBRARIES})
 
 add_executable(speech_capture ${CAPTURE_SOURCES})
-set_target_properties(speech_capture PROPERTIES LINK_FLAGS "-s EXPORT_NAME=CaptureModule -s BINARYEN_ASYNC_COMPILATION=0 --post-js ${CAPTURE_JS_AUDIO} --post-js ${CAPTURE_JS_PROCESSOR}")
+set_target_properties(speech_capture PROPERTIES LINK_FLAGS "-s EXPORT_NAME=CaptureModule -s BINARYEN_ASYNC_COMPILATION=0 -s MODULARIZE_INSTANCE=1 --post-js ${CAPTURE_JS_AUDIO} --post-js ${CAPTURE_JS_PROCESSOR}")
+
+add_custom_target(capture_js DEPENDS ${CAPTURE_JS_AUDIO} ${CAPTURE_JS_PROCESSOR})
+add_dependencies(speech_capture capture_js)
 
 target_link_libraries(speech_capture
         Eigen3::Eigen)
@@ -61,14 +65,14 @@ install(FILES
     DESTINATION
     ${CMAKE_SOURCE_DIR}/../public/js)
 
-install(CODE [[
-    file(READ ${CMAKE_BINARY_DIR}/speech_analysis.js FILE_CNT)
-    set(FILE_CNT "/* es-lint disable */${FILE_CNT}")
-    file(WRITE ${CMAKE_BINARY_DIR}/speech_analysis.js ${FILE_CNT})
-]])
-
 install(FILES
     ${CMAKE_BINARY_DIR}/speech_analysis.js
     DESTINATION
     ${CMAKE_SOURCE_DIR}/../src/analyser)
+
+install(CODE "
+file(READ ${CMAKE_SOURCE_DIR}/../src/analyser/speech_analysis.js FILE_CNT LIMIT_COUNT 1)
+set(FILE_CNT \"/* eslint-disable */\n\${FILE_CNT}\")
+file(WRITE ${CMAKE_SOURCE_DIR}/../src/analyser//speech_analysis.js \"\${FILE_CNT}\")
+")
 

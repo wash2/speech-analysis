@@ -8,7 +8,6 @@
 #include <Eigen/Core>
 #include <emscripten/val.h>
 #include <deque>
-#include <thread>
 #include <memory>
 #include "../audio/AudioCapture.h"
 #include "Formant/Formant.h"
@@ -50,10 +49,9 @@ public:
     [[nodiscard]] const Formant::Frame & getLastFormantFrame();
     [[nodiscard]] double getLastPitchFrame();
 
-    void setFrameCallback(std::function<void()> callback);
-
     void update(emscripten::val data, int sampleRate);
-
+    emscripten::val getFrame();
+    
 private:
     void _updateFrameCount();
 
@@ -66,8 +64,6 @@ private:
     void analyseFormantLp();
     void analyseFormantDeep();
     void applyMedianFilters();
-
-    std::function<void()> newFrameCallback;
 
     // Parameters.
     std::chrono::duration<double, std::milli> frameSpace;
@@ -91,11 +87,6 @@ private:
     SpecFrame lastSpectrumFrame;
     Formant::Frame lastFormantFrame;
     double lastPitchFrame;
-
-    // Thread-related members
-    std::thread thread;
-    std::atomic<bool> running;
-    std::mutex mutex;
 };
 
 
