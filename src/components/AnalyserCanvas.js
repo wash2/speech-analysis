@@ -44,6 +44,7 @@ class AnalyserCanvas extends React.PureComponent {
       tracks,
       width: canvasWidth,
       height,
+      maximumFrequency,
     } = this.props
 
     const width = tracks.length
@@ -80,6 +81,17 @@ class AnalyserCanvas extends React.PureComponent {
       }
 
       x++
+    }
+
+    let scaleF = 0
+    while (scaleF <= maximumFrequency) {
+      const lineWidth = 5
+      const y = this.yFromFrequency(scaleF)
+
+      ctx.fillStyle = 'white'
+      ctx.fillRect(width - lineWidth, y - 1, lineWidth, 3)
+
+      scaleF += 100
     }
 
     ctx.scale(width / canvasWidth, 1)
