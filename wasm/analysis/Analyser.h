@@ -50,8 +50,10 @@ public:
     [[nodiscard]] double getLastPitchFrame();
 
     void update(emscripten::val data, int sampleRate);
-    emscripten::val getFrame();
-    
+    emscripten::val getFrame(int iframe);
+    emscripten::val getLastFrame();
+    emscripten::val getTracks();
+
 private:
     void _updateFrameCount();
 

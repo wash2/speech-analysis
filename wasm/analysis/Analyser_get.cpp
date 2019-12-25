@@ -2,13 +2,13 @@
 
 using namespace emscripten;
 
-val Analyser::getFrame()
+val Analyser::getFrame(int iframe)
 {
     val result = val::object();
 
-    double pitch = getLastPitchFrame();
+    double pitch = getPitchFrame(iframe);
 
-    auto formantFrame = getLastFormantFrame();
+    auto formantFrame = getFormantFrame(iframe);
     val formantArray = val::array();
     for (int n = 0; n < formantFrame.nFormants; ++n) {
         val frm = val::object();
@@ -26,3 +26,18 @@ val Analyser::getFrame()
     return result;
 }
 
+val Analyser::getLastFrame()
+{
+    return getFrame(frameCount - 1);
+}
+
+val Analyser::getTracks()
+{
+    val result = val::array();
+
+    for (int iframe = 0; iframe < frameCount; ++iframe) {
+        result.set(iframe, getFrame(iframe));
+    }
+
+    return result;
+}

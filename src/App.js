@@ -5,6 +5,8 @@ import Typography from '@material-ui/core/Typography'
 import './App.css'
 import AudioCapture from './analyser/AudioCapture'
 import AnalyserModule from './analyser/speech_analysis'
+
+import AnalyserCanvas from './components/AnalyserCanvas'
 import Footer from './components/Footer'
 
 class App extends React.PureComponent {
@@ -12,9 +14,13 @@ class App extends React.PureComponent {
   constructor(props) {
     super(props)
     this.state = {
-      isVoiced: false,
-      pitch: 0,
-      formants: [],
+      tracks: [
+        {
+          isVoiced: false,
+          pitch: 0,
+          formants: [],
+        },
+      ],
     }
 
     this.capture = new AudioCapture()
@@ -44,17 +50,15 @@ class App extends React.PureComponent {
 
     this.analyser.update(data, 44100)
 
-    const result = this.analyser.getFrame()
+    const tracks = this.analyser.getTracks()
 
-    this.setState(result)
+    this.setState({tracks})
   }
 
   render() {
 
     const {
-      isVoiced,
-      pitch,
-      formants,
+      tracks
     } = this.state
 
     return (
@@ -74,15 +78,14 @@ class App extends React.PureComponent {
                 </Button>
               </Grid>
               <Grid item>
-                {isVoiced ? `Voiced: Fo = ${Math.round(10 * pitch) / 10} Hz` : 'Unvoiced'}
+                <AnalyserCanvas
+                  width={800}
+                  height={600}
+                  scale={'MEL'}
+                  maximumFrequency={5500}
+                  tracks={tracks}
+                />
               </Grid>
-              {
-                formants.map(({frequency, bandwidth}, i) => (
-                  <Grid item key={`formant-${i}`}>
-                    {`F${Math.floor(i)+1} = ${Math.round(frequency)} Hz`}
-                  </Grid>
-                ))
-              }
             </Grid>
           </div>
           <Footer/>
