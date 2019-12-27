@@ -1,0 +1,15 @@
+.App, .App-container {
+    margin: 0;
+    padding: 0;
+    border-box: content;
+    width: 100%;
+    height: 100%;
+}
+
+.App-container {
+}
+
+.AnalyserCanvas {
+    width: 100%;
+    height: 100%;
+}

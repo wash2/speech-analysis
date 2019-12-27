@@ -1,5 +1,6 @@
 import React from 'react'
 import Grid from '@material-ui/core/Grid'
+import AppBar from '@material-ui/core/AppBar'
 import Button from '@material-ui/core/Button'
 import Typography from '@material-ui/core/Typography'
 import './App.css'
@@ -14,6 +15,8 @@ class App extends React.PureComponent {
   constructor(props) {
     super(props)
     this.state = {
+      isSettingUp: false,
+      isSetup: false,
       tracks: [
         {
           isVoiced: false,
@@ -21,6 +24,7 @@ class App extends React.PureComponent {
           formants: [],
         },
       ],
+      params: {}
     }
 
     this.capture = new AudioCapture()
@@ -31,6 +35,8 @@ class App extends React.PureComponent {
   }
 
   setupCapture = async () => {
+    this.setState({isSettingUp: true})
+
     await this.capture.createSource()
     await this.capture.loadModules()
 
@@ -43,6 +49,8 @@ class App extends React.PureComponent {
     };
 
     callback()
+
+    this.setState({isSetup: true});
   }
 
   nextBuffer = (data) => {
@@ -51,36 +59,61 @@ class App extends React.PureComponent {
     this.analyser.update(data, 44100)
 
     const tracks = this.analyser.getTracks()
+    const params = this.analyser.getParameters()
 
-    this.setState({tracks})
+    this.setState({tracks, params})
   }
+
+  setAnalyse = () => this.analyser.setParameters({isAnalysing: true})
+  unsetAnalyse = () => this.analyser.setParameters({isAnalysing: false})
 
   render() {
 
     const {
-      tracks
+      isSettingUp,
+      isSetup,
+      tracks,
+      params: {
+        frameCount,
+        isAnalysing,
+        fftSize,
+        lpOrder,
+        maxFrequency,
+      },
     } = this.state
 
     return (
         <div className="App">
           <div className="App-wrapper">
+            <AppBar>
+              <Grid
+                  container
+              >
+                <Grid item>
+                  {
+                    !isSetup ? (
+                      <Button onClick={this.setupCapture} disabled={isSettingUp}>
+                        Start
+                      </Button>
+                    ) : (
+                      <Button onClick={isAnalysing ? this.unsetAnalyse : this.setAnalyse}>
+                        {isAnalysing ? 'Pause' : 'Resume'}
+                      </Button>
+                    )
+                  }
+                </Grid>
+              </Grid>
+            </AppBar>
             <Grid
                 container
                 spacing={4}
                 direction="column"
-                alignItems="flex-start"
-                alignContent="flex-start"
+                alignItems="stretch"
+                alignContent="stretch"
                 className="App-container"
             >
               <Grid item>
-                <Button onClick={this.setupCapture}>
-                  Record
-                </Button>
-              </Grid>
-              <Grid item>
                 <AnalyserCanvas
-                  width={800}
-                  height={600}
                   scale={'MEL'}
                   maximumFrequency={5500}
                   tracks={tracks}

@@ -22,19 +22,16 @@ Analyser::Analyser()
     : doAnalyse(true),
       nfft(512),
       lpOrder(10),
-      maximumFrequency(5000.0),
-      frameSpace(10.0),
-      windowSpan(5.0)
+      maximumFrequency(5000.0)
 {
-    frameCount = 0;
-    _updateFrameCount();
+    _updateFrameCount(512);
 
     // Initialize the audio frames to zero.
     x.setZero(512);
 }
 
-void Analyser::toggle() {
-    doAnalyse = !doAnalyse;
+void Analyser::setAnalysing(bool _doAnalyse) {
+    doAnalyse = _doAnalyse;
 }
 
 bool Analyser::isAnalysing() const {
@@ -65,22 +62,8 @@ double Analyser::getMaximumFrequency() const {
     return maximumFrequency;
 }
 
-void Analyser::setFrameSpace(const std::chrono::duration<double, std::milli> & _frameSpace) {
-    frameSpace = _frameSpace;
-    _updateFrameCount();
-}
-
-const std::chrono::duration<double, std::milli> & Analyser::getFrameSpace() const {
-    return frameSpace;
-}
-
-void Analyser::setWindowSpan(const std::chrono::duration<double> & _windowSpan) {
-    windowSpan = _windowSpan;
-    _updateFrameCount();
-}
-
-const std::chrono::duration<double> & Analyser::getWindowSpan() const {
-    return windowSpan;
+void Analyser::setFrameCount(int _frameCount) {
+    _updateFrameCount(_frameCount);
 }
 
 int Analyser::getFrameCount() {
@@ -114,9 +97,7 @@ double Analyser::getLastPitchFrame() {
     return pitchTrack.back();
 }
 
-void Analyser::_updateFrameCount() {
-    const int newFrameCount = (1000 * windowSpan.count()) / frameSpace.count();
-
+void Analyser::_updateFrameCount(int newFrameCount) {
     if (frameCount < newFrameCount) {
         int diff = newFrameCount - frameCount;
         spectra.insert(spectra.begin(), diff, defaultSpec);

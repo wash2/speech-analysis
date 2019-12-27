@@ -10,7 +10,9 @@ EMSCRIPTEN_BINDINGS(analyser_module) {
         .constructor()
         .function("update", &Analyser::update)
         .function("getLastFrame", &Analyser::getLastFrame)
-        .function("getTracks", &Analyser::getTracks);
+        .function("getTracks", &Analyser::getTracks)
+        .function("getParameters", &Analyser::getParameters)
+        .function("setParameters", &Analyser::setParameters);
     
     class_<ArrayXd>("ArrayXd")
         .constructor()

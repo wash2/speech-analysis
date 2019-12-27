@@ -1,6 +1,5 @@
 node_modules/
-pkg/
-external-*/
+build/
 
 # Created by .ignore support plugin (hsz.mobi)
 ### C++ template

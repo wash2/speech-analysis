@@ -26,9 +26,10 @@ class AnalyserCanvas extends React.PureComponent {
   yFromFrequency = (frequency) => {
     const {
       scale,
-      height,
       maximumFrequency,
     } = this.props
+
+    const height = this.canvas.height
 
     if (scale === 'MEL') {
       const max = hz2mel(maximumFrequency)
@@ -42,10 +43,14 @@ class AnalyserCanvas extends React.PureComponent {
     const ctx = this.ctx
     const {
       tracks,
-      width: canvasWidth,
-      height,
       maximumFrequency,
     } = this.props
+
+    const canvasWidth = this.canvas.parentNode.clientWidth
+    const height = this.canvas.parentNode.clientHeight
+
+    this.canvas.width = canvasWidth
+    this.canvas.height = height
 
     const width = tracks.length
 
@@ -71,11 +76,10 @@ class AnalyserCanvas extends React.PureComponent {
 
       let nf = 0;
       for (const {frequency, bandwidth} of formants) {
-        const y1 = this.yFromFrequency(frequency - .8 * bandwidth / 2)
-        const y2 = this.yFromFrequency(frequency + .8 * bandwidth / 2)
+        const y = this.yFromFrequency(frequency)
 
-        ctx.fillStyle = isVoiced ? 'orange' : 'darkred'
-        ctx.fillRect(x, y1, 1, y2 - y1)
+        ctx.fillStyle = isVoiced ? 'orange' : 'rgba(255, 0, 0, 75%)'
+        ctx.fillRect(x, y - 1, 1, 3)
 
         nf++
       }
@@ -83,29 +87,32 @@ class AnalyserCanvas extends React.PureComponent {
       x++
     }
 
+    ctx.scale(width / canvasWidth, 1)
+
     let scaleF = 0
     while (scaleF <= maximumFrequency) {
       const lineWidth = 5
       const y = this.yFromFrequency(scaleF)
 
       ctx.fillStyle = 'white'
-      ctx.fillRect(width - lineWidth, y - 1, lineWidth, 3)
+      ctx.fillRect(canvasWidth - lineWidth, y - 1, lineWidth, 3)
+
+      ctx.font = '24px Montserrat'
+      const metrics = ctx.measureText(scaleF)
+      ctx.fillText(scaleF, canvasWidth - lineWidth - 3 - metrics.width, y + metrics.actualBoundingBoxAscent / 2)
 
       scaleF += 100
     }
-
-    ctx.scale(width / canvasWidth, 1)
   }
 
   render() {
 
-    const {
-      width,
-      height,
-    } = this.props
-
     return (
-        <canvas width={width} height={height} ref={r => this.canvas = r}></canvas>
+        <canvas
+            className="AnalyserCanvas"
+            ref={r => this.canvas = r}
+        >
+        </canvas>
     )
 
   }

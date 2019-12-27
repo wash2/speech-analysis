@@ -22,22 +22,17 @@ class Analyser {
 public:
     Analyser();
 
-    void toggle();
+    void setAnalysing(bool);
 
-    void setSpectrum(bool);
     void setFftSize(int);
     void setLinearPredictionOrder(int);
     void setMaximumFrequency(double);
-    void setFrameSpace(const std::chrono::duration<double, std::milli> & frameSpace);
-    void setWindowSpan(const std::chrono::duration<double> & windowSpan);
+    void setFrameCount(int);
 
     [[nodiscard]] bool isAnalysing() const;
     [[nodiscard]] int getFftSize() const;
     [[nodiscard]] int getLinearPredictionOrder() const;
     [[nodiscard]] double getMaximumFrequency() const;
-
-    [[nodiscard]] const std::chrono::duration<double, std::milli> & getFrameSpace() const;
-    [[nodiscard]] const std::chrono::duration<double> & getWindowSpan() const;
 
     [[nodiscard]] int getFrameCount();
 
@@ -53,9 +48,12 @@ public:
     emscripten::val getFrame(int iframe);
     emscripten::val getLastFrame();
     emscripten::val getTracks();
+    
+    emscripten::val getParameters();
+    void setParameters(emscripten::val params);
 
 private:
-    void _updateFrameCount();
+    void _updateFrameCount(int);
 
     void applyWindow();
     void analyseSpectrum();
@@ -68,8 +66,6 @@ private:
     void applyMedianFilters();
 
     // Parameters.
-    std::chrono::duration<double, std::milli> frameSpace;
-    std::chrono::duration<double> windowSpan;
     int frameCount;
 
     bool doAnalyse;

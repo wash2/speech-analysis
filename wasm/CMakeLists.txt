@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s -g")
 set(ANALYSER_SOURCES
         analysis/Analyser_mainLoop.cpp
         analysis/Analyser_get.cpp
+        analysis/Analyser_params.cpp
         analysis/Analyser.cpp
         analysis/Analyser.h
         analysis/parts/formants.cpp
