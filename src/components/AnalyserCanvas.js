@@ -16,10 +16,16 @@ class AnalyserCanvas extends React.PureComponent {
 
   componentDidMount() {
     this.ctx = this.canvas.getContext('2d')
+    this.canvas.width = this.canvas.parentNode.clientWidth
+    this.canvas.height = this.canvas.parentNode.clientHeight
+
     this.updateCanvas()
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
+    this.canvas.width = this.canvas.parentNode.clientWidth
+    this.canvas.height = this.canvas.parentNode.clientHeight
+
     this.updateCanvas()
   }
 
@@ -46,11 +52,8 @@ class AnalyserCanvas extends React.PureComponent {
       maximumFrequency,
     } = this.props
 
-    const canvasWidth = this.canvas.parentNode.clientWidth
-    const height = this.canvas.parentNode.clientHeight
-
-    this.canvas.width = canvasWidth
-    this.canvas.height = height
+    const canvasWidth = this.canvas.width
+    const height = this.canvas.height
 
     const width = tracks.length
 
@@ -95,11 +98,17 @@ class AnalyserCanvas extends React.PureComponent {
       const y = this.yFromFrequency(scaleF)
 
       ctx.fillStyle = 'white'
-      ctx.fillRect(canvasWidth - lineWidth, y - 1, lineWidth, 3)
 
-      ctx.font = '24px Montserrat'
-      const metrics = ctx.measureText(scaleF)
-      ctx.fillText(scaleF, canvasWidth - lineWidth - 3 - metrics.width, y + metrics.actualBoundingBoxAscent / 2)
+      if (scaleF % 500 === 0) {
+        ctx.fillRect(canvasWidth - 2 * lineWidth, y, 2 * lineWidth, 2)
+
+        ctx.font = '24px Montserrat'
+        const metrics = ctx.measureText(scaleF)
+        ctx.fillText(scaleF, canvasWidth - 2 * lineWidth - 3 - metrics.width, y + metrics.actualBoundingBoxAscent / 2)
+      }
+      else {
+        ctx.fillRect(canvasWidth - lineWidth, y, lineWidth, 2)
+      }
 
       scaleF += 100
     }
@@ -109,7 +118,6 @@ class AnalyserCanvas extends React.PureComponent {
 
     return (
         <canvas
-            className="AnalyserCanvas"
             ref={r => this.canvas = r}
         >
         </canvas>

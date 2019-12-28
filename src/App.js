@@ -1,6 +1,5 @@
 import React from 'react'
 import Grid from '@material-ui/core/Grid'
-import AppBar from '@material-ui/core/AppBar'
 import Button from '@material-ui/core/Button'
 import Typography from '@material-ui/core/Typography'
 import './App.css'
@@ -10,13 +9,17 @@ import AnalyserModule from './analyser/speech_analysis'
 import AnalyserCanvas from './components/AnalyserCanvas'
 import Footer from './components/Footer'
 
+const SETUP_NO = 0
+const SETUP_MIC = 1
+const SETUP_FILE = 2
+
 class App extends React.PureComponent {
 
   constructor(props) {
     super(props)
     this.state = {
       isSettingUp: false,
-      isSetup: false,
+      isSetup: SETUP_NO,
       tracks: [
         {
           isVoiced: false,
@@ -24,7 +27,8 @@ class App extends React.PureComponent {
           formants: [],
         },
       ],
-      params: {}
+      params: {},
+      updateBit: 0,
     }
 
     this.capture = new AudioCapture()
@@ -32,25 +36,62 @@ class App extends React.PureComponent {
     AnalyserModule().then(module => {
       this.analyser = new module.Analyser()
     })
-  }
 
-  setupCapture = async () => {
-    this.setState({isSettingUp: true})
+ }
 
-    await this.capture.createSource()
-    await this.capture.loadModules()
-
-    this.capture.setDataCallback(this.nextBuffer)
-
+  componentDidMount() {
     const callback = () => {
-      this.capture.requestData()
-
+      this.loopCallback()
       window.requestAnimationFrame(callback)
     };
 
     callback()
 
-    this.setState({isSetup: true});
+  }
+
+  setupMicCapture = async () => {
+    this.setState({isSettingUp: true})
+
+    await this.capture.createMicrophoneSource()
+    await this.setupCapture()
+
+    this.setState({isSetup: SETUP_MIC})
+    this.setState({isSettingUp: false})
+  }
+
+  setupFileCapture = async () => {
+    this.fileInput.value = ''
+    this.fileInput.click()
+    this.fileInput.onchange = async (oce) => {
+      const files = oce.target.files
+      if (files.length >= 1) {
+        this.setState({isSettingUp: true})
+
+        const fileReader = new FileReader()
+        fileReader.readAsArrayBuffer(files[0])
+        fileReader.onload = async (fre) => {
+          await this.capture.createFileSource(fre.target.result)
+          await this.setupCapture()
+
+          this.setState({isSetup: SETUP_FILE})
+          this.setState({isSettingUp: false})
+        }
+      }
+    }
+  }
+
+  setupCapture = async () => {
+    await this.capture.loadModules()
+
+    this.capture.setDataCallback(this.nextBuffer)
+  }
+
+  loopCallback = () => {
+    this.setState({updateBit: !this.state.updateBit})
+
+    if (this.state.isSetup) {
+      this.capture.requestData()
+    }
   }
 
   nextBuffer = (data) => {
@@ -67,6 +108,11 @@ class App extends React.PureComponent {
   setAnalyse = () => this.analyser.setParameters({isAnalysing: true})
   unsetAnalyse = () => this.analyser.setParameters({isAnalysing: false})
 
+  stopFile = () => {
+    this.capture.stopFileSource()
+    this.setState({isSetup: SETUP_NO})
+  }
+
   render() {
 
     const {
@@ -80,46 +126,47 @@ class App extends React.PureComponent {
         lpOrder,
         maxFrequency,
       },
+      updateBit,
     } = this.state
 
     return (
         <div className="App">
-          <div className="App-wrapper">
-            <AppBar>
-              <Grid
-                  container
-              >
-                <Grid item>
-                  {
-                    !isSetup ? (
-                      <Button onClick={this.setupCapture} disabled={isSettingUp}>
-                        Start
-                      </Button>
-                    ) : (
-                      <Button onClick={isAnalysing ? this.unsetAnalyse : this.setAnalyse}>
-                        {isAnalysing ? 'Pause' : 'Resume'}
-                      </Button>
-                    )
-                  }
-                </Grid>
-              </Grid>
-            </AppBar>
-            <Grid
-                container
-                spacing={4}
-                direction="column"
-                alignItems="stretch"
-                alignContent="stretch"
-                className="App-container"
-            >
-              <Grid item>
-                <AnalyserCanvas
-                  scale={'MEL'}
-                  maximumFrequency={5500}
-                  tracks={tracks}
-                />
-              </Grid>
-            </Grid>
+          <div className="App-controls">
+            <div>
+              {
+                isSetup !== SETUP_MIC ? (
+                  <Button variant="contained" onClick={this.setupMicCapture} disabled={isSettingUp}>
+                    Microphone
+                  </Button>
+                ) : (
+                  <Button variant="contained" onClick={isAnalysing ? this.unsetAnalyse : this.setAnalyse}>
+                    {isAnalysing ? 'Pause' : 'Resume'}
+                  </Button>
+                )
+              }
+            </div>
+            <div>
+              {
+                isSetup !== SETUP_FILE ? (
+                  <Button variant="contained" onClick={this.setupFileCapture} disabled={isSettingUp}>
+                    Load file
+                  </Button>
+                ) : (
+                  <Button variant="contained" onClick={this.stopFile}>
+                    Stop
+                  </Button>
+                )
+              }
+            </div>
+            <input ref={r => this.fileInput = r} style={{display: 'none'}} type="file"/>
+          </div>
+          <div className="App-container">
+            <AnalyserCanvas
+              updateBit={updateBit}
+              scale={'MEL'}
+              maximumFrequency={5500}
+              tracks={tracks}
+            />
           </div>
           <Footer/>
         </div>

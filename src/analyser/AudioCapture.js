@@ -1,23 +1,57 @@
 window.AudioContext = window.AudioContext || window.webkitAudioContext
 
+const SOURCE_MIC = 1
+const SOURCE_FILE = 2
+
 class AudioCapture {
 
   constructor() {
-    this.context = new AudioContext({sampleRate: 44100})
+    this.context = null
+    this.source = null
+    this.sampleRate = 44100
   }
 
-  createSource = () => {
+  createMicrophoneSource = () => {
+    if (this.context === null) {
+      this.context = new AudioContext({sampleRate: this.sampleRate})
+    }
+
     return navigator.mediaDevices.getUserMedia({audio: true})
       .then(stream => {
-        if (this.stream && this.source) {
+        if (this.source !== null) {
           this.source.disconnect()
         }
-        this.stream = stream
         this.source = this.context.createMediaStreamSource(stream)
+        this.sourceType = SOURCE_MIC
       })
       .catch(ex => {
         console.error('Error capturing audio', ex)
       })
+  }
+
+  createFileSource = async (file) => {
+    if (this.context === null) {
+      this.context = new AudioContext({sampleRate: this.sampleRate})
+    }
+
+    const buffer = await this.context.decodeAudioData(file)
+
+    if (this.source !== null) {
+      if (this.sourceType === SOURCE_FILE) {
+        this.source.stop()
+      }
+      this.source.disconnect()
+    }
+    this.source = this.context.createBufferSource()
+    this.source.buffer = buffer
+    this.source.loop = false
+    this.sourceType = SOURCE_FILE
+  }
+
+  stopFileSource = () => {
+    this.source.stop()
+    this.source.disconnect()
+    this.source = null
   }
 
   loadModules = () => {
@@ -36,6 +70,10 @@ class AudioCapture {
 
   connectNodes = () => {
     this.source.connect(this.captureNode)
+    if (this.sourceType === SOURCE_FILE) {
+      this.source.connect(this.context.destination)
+      this.source.start()
+    }
   }
 
   requestData = () => {
