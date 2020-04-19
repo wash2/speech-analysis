@@ -2,8 +2,6 @@
 // Created by clo on 08/11/2019.
 //
 
-#include <map>
-#include <stack>
 #include <iostream>
 #include <iterator>
 #include "Formant.h"
@@ -11,11 +9,6 @@
 #include "../Math/Bairstow.h"
 
 using namespace Eigen;
-
-struct root {
-    double r, phi;
-    double f, b;
-};
 
 static int cauchyIntegral(const ArrayXd & p, double r1, double r2, double phi, int maxDepth);
 
@@ -35,43 +28,48 @@ void Formant::frameFromRoots(
     frm.formant.clear();
     frm.formant.reserve(r.size());
 
-    std::vector<root> roots;
-    std::vector<root> peakMergers;
-    std::vector<dcomplex> finalRoots;
+    rpm::vector<root> roots;
+    rpm::vector<root> peakMergers;
+    rpm::vector<dcomplex> finalRoots;
 
     for (const auto & v : r) {
         if (v.imag() < 0) {
             continue;
         }
 
-        double r = std::abs(v);
+        double r = std::abs(v); 
         double phi = std::arg(v);
 
-        // Magnitude condition for forming a formant
-        if (0.7 <= r && r < 1.0) {
-            double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
+        double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
+
+        if (f >= 50.0 && f <= (samplingFrequency / 2.0 - 50.0)) {
             double b = -std::log(r) * samplingFrequency / M_PI;
+
             roots.push_back({r, phi, f, b});
         }
     }
 
     std::sort(roots.begin(), roots.end(),
-            [](const auto & a, const auto & b) { return std::abs(a.phi) < std::abs(b.phi); });
-
+            [](const auto & a, const auto & b) { return a.f < b.f; });
+   
     int ncand = roots.size();
-    for (int i = 0; i < ncand - 1; ++i) {
+    for (int i = 0; i < ncand; ++i) {
         double f1 = roots[i].f;
-        double f2 = roots[i + 1].f;
+        if (i < ncand - 1) {
+            double f2 = roots[i + 1].f;
 
-        // Phase condition for peak merger
-        if (std::abs(f2 - f1) > 700.0) {
-            peakMergers.push_back(roots[i]);
+            // Phase condition for peak merger
+            if (std::abs(f2 - f1) > 700.0) {
+                peakMergers.push_back(roots[i]);
+            }
+            else if (i == 0 && f2 > 1800.0) {
+                peakMergers.push_back(roots[i]);
+            }
+            else {
+                frm.formant.push_back({f1, roots[i].b});
+            }
         }
-        else if (i == 0 && f2 > 1800.0) {
-            peakMergers.push_back(roots[i]);
-        }
-        else {
-            // It's a single formant.
+        else { 
             frm.formant.push_back({f1, roots[i].b});
         }
     }
@@ -89,30 +87,29 @@ void Formant::frameFromRoots(
             phi3 = minPhi;
         }
 
-        int n3 = cauchyIntegral(p, 0, 2, phi3, 10);
-        int n4 = cauchyIntegral(p, 0, 2, phi4, 10);
+        int n3 = cauchyIntegral(p, 0, 2, phi3, 50);
+        int n4 = cauchyIntegral(p, 0, 2, phi4, 50);
 
         int n = abs(n4 - n3);
 
         // If there *are* two poles in the section, polish them as a pair and add them.
-        if (n == 2) {
-            std::vector<dcomplex> polished;
-            Bairstow::solve(p, 0.9, phiPeak, polished);
+        if (n >= 2) {
+            rpm::vector<dcomplex> polished;
+            Bairstow::solve(p, 0.7, phiPeak, polished);
             finalRoots.insert(finalRoots.end(), polished.begin(), polished.end());
         }
-        else {
+        else { 
             frm.formant.push_back({v.f, v.b});
         }
     }
 
     for (const auto & v : finalRoots) {
         double r = std::abs(v);
+        double phi = std::arg(v);
+    
+        double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
 
-        // Magnitude test
-        if (0.7 <= r && r < 1.0) {
-            double phi = std::arg(v);
-
-            double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
+        if (f >= 50.0 && f <= (samplingFrequency / 2.0 - 50.0)) {
             double b = -std::log(r) * samplingFrequency / M_PI;
 
             frm.formant.push_back({f, b});
@@ -123,7 +120,7 @@ void Formant::frameFromRoots(
     ::Formant::sort(frm);
 }
 
-static void snellCalcRegion(double t, std::map<double, int> & C, const ArrayXd & p, double phi)
+static void snellCalcRegion(double t, rpm::map<double, int> & C, const ArrayXd & p, double phi)
 {
     // Do not calculate again.
     if (C.find(t) == C.end()) {
@@ -137,11 +134,11 @@ static void snellCalcRegion(double t, std::map<double, int> & C, const ArrayXd &
     }
 }
 
-static void snellCalcPartition(const std::vector<double> & t, std::map<double, int> & C, const ArrayXd & p, double phi, int maxDepth, std::vector<double> & partition)
+static void snellCalcPartition(const rpm::vector<double> & t, rpm::map<double, int> & C, const ArrayXd & p, double phi, int maxDepth, rpm::vector<double> & partition)
 {
-    std::vector<std::pair<double, double>> partNext;
-    std::vector<std::pair<double, double>> partCurrent;
-    for (int i = 0; i < t.size() - 1; ++i) {
+    rpm::vector<std::pair<double, double>> partNext;
+    rpm::vector<std::pair<double, double>> partCurrent;
+    for (int i = 0; i < signed(t.size()) - 1; ++i) {
         partCurrent.emplace_back(t[i], t[i + 1]);
     }
 
@@ -171,6 +168,8 @@ static void snellCalcPartition(const std::vector<double> & t, std::map<double, i
 
     partition.push_back(partCurrent.at(0).first);
     for (const auto & [t1, t2] : partCurrent) {
+        (void) t1;
+
         partition.push_back(t2);
     }
 }
@@ -181,10 +180,10 @@ static int cauchyIntegral(const ArrayXd & p, double r1, double r2, double phi, i
     // If ti, i = 0 to i = M is a partition of the ray (r1 -> r2),
     // then p(ti, ti+1) denotes the number of octants (mod 8) between C(ti) and C(ti-1)
 
-    std::map<double, int> C; // Memoised counts for every value of t encountered.
+    rpm::map<double, int> C; // Memoised counts for every value of t encountered.
 
-    std::vector<double> initialPartition({0, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0});
-    std::vector<double> finalPartition;
+    rpm::vector<double> initialPartition({0, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0});
+    rpm::vector<double> finalPartition;
     snellCalcPartition(initialPartition, C, p, phi, maxDepth, finalPartition);
 
     /*for (int i = 0; i < finalPartition.size(); ++i) {
@@ -199,7 +198,7 @@ static int cauchyIntegral(const ArrayXd & p, double r1, double r2, double phi, i
 
     int Np = 0, Nm = 0;
 
-    for (int i = 0; i < finalPartition.size() - 1; ++i) {
+    for (int i = 0; i < signed(finalPartition.size()) - 1; ++i) {
         double t1 = finalPartition[i];
         double t2 = finalPartition[i + 1];
         // Make sure all C values are calculated for the final partition.

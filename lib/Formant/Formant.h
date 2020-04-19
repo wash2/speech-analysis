@@ -6,10 +6,13 @@
 #define SPEECH_ANALYSIS_FORMANT_H
 
 #include <Eigen/Core>
-#include <vector>
-#include <deque>
-
+#include "../rpmalloc.h"
 #include "../LPC/LPC.h"
+
+struct root {
+    double r, phi;
+    double f, b;
+};
 
 namespace Formant
 {
@@ -20,11 +23,11 @@ namespace Formant
 
     struct Frame {
         int nFormants;
-        std::vector<Formant> formant;
+        rpm::vector<Formant> formant;
         double intensity;
     };
 
-    using Frames = std::deque<Frame>;
+    using Frames = rpm::deque<Frame>;
 
     void sort(Frame & frm);
 
@@ -34,6 +37,10 @@ namespace Formant
 
     double calculateVTL(const Frames & frames);
 
+    bool track(rpm::deque<Frame> & frms,
+               int ntrack,
+               double refF1, double refF2, double refF3, double refF4, double refF5,
+               double dfCost, double bfCost, double octaveJumpCost);
 }
 
 #endif //SPEECH_ANALYSIS_FORMANT_H

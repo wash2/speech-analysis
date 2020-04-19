@@ -5,30 +5,30 @@
 #ifndef SPEECH_ANALYSIS_AUDIODEVICES_H
 #define SPEECH_ANALYSIS_AUDIODEVICES_H
 
-#include <portaudio.h>
+#include "miniaudio.h"
 #include <string>
 #include <memory>
-#include <vector>
+#include "rpmalloc.h"
 
 struct AudioDevice {
-    int id;
+    ma_device_id id;
     std::string name;
 };
 
 class AudioDevices {
 public:
-    AudioDevices();
+    AudioDevices(ma_context * ctx);
 
     bool refreshList();
 
-    const std::vector<AudioDevice> & getInputs() const;
-    const std::vector<AudioDevice> & getOutputs() const;
-
-    PaDeviceIndex getDefaultInputDevice() const;
+    const rpm::vector<AudioDevice> & getInputs() const;
+    const rpm::vector<AudioDevice> & getOutputs() const;
 
 private:
-    std::vector<AudioDevice> inputs;
-    std::vector<AudioDevice> outputs;
+    ma_context * maCtx;
+
+    rpm::vector<AudioDevice> inputs;
+    rpm::vector<AudioDevice> outputs;
 };
 
 #endif // SPEECH_ANALYSIS_AUDIODEVICES_H

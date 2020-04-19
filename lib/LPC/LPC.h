@@ -6,7 +6,7 @@
 #define SPEECH_ANALYSIS_LPC_H
 
 #include <Eigen/Core>
-#include <deque>
+#include "../rpmalloc.h"
 
 // #define LPC_DEBUG
 
@@ -20,7 +20,7 @@ namespace LPC {
 
     struct Frames {
         int maxnCoefficients;
-        std::deque<Frame> d_frames;
+        rpm::deque<Frame> d_frames;
     };
 
     enum Method {
@@ -42,6 +42,8 @@ namespace LPC {
     Frames analyseAuto(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency);
     Frames analyseCovar(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency);
     Frames analyseBurg(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency);
+
+    Eigen::ArrayXd residual(const Eigen::ArrayXd & x, int L, int shift, int order);
 
 };
 

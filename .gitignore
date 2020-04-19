@@ -1,6 +1,11 @@
+out.*
+*.log
+web-bundle/speech_analysis.*
 
 pkg/
 external-*/
+
+testcase.*
 
 # Created by .ignore support plugin (hsz.mobi)
 ### C++ template
@@ -35,7 +40,7 @@ external-*/
 # Executables
 *.exe
 *.out
-*.app
+#*.app
 ### C template
 # Prerequisites
 *.d
@@ -70,7 +75,7 @@ external-*/
 # Executables
 *.exe
 *.out
-*.app
+#*.app
 *.i*86
 *.x86_64
 *.hex
@@ -241,7 +246,7 @@ $RECYCLE.BIN/
 # Executables
 *.exe
 *.out
-*.app
+#*.app
 *.i*86
 *.x86_64
 *.hex
@@ -390,7 +395,7 @@ CTestTestfile.cmake
 # Executables
 *.exe
 *.out
-*.app
+#*.app
 ### Linux template
 *~
 

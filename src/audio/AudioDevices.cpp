@@ -3,72 +3,62 @@
 //
 
 #include <iostream>
+#include "../Exceptions.h"
 #include "AudioDevices.h"
+#include "../log/simpleQtLogger.h"
 
-AudioDevices::AudioDevices()
+AudioDevices::AudioDevices(ma_context * ctx)
+    : maCtx(ctx)
 {
     refreshList();
 }
 
 bool AudioDevices::refreshList()
 {
+    L_INFO("Refreshing audio device list...");
+
     inputs.clear();
     outputs.clear();
 
-    int numDevices = Pa_GetDeviceCount();
-    if (numDevices < 0) {
-        std::cerr << "ERROR: Pa_CountDevices returned 0x" << std::hex << numDevices << std::dec << std::endl;
-        return false;
+    ma_device_info *playback, *capture;
+    ma_uint32 playbackCount, captureCount;
+
+    ma_context_get_devices(maCtx, &playback, &playbackCount, &capture, &captureCount);
+
+    for (int i = 0; i < signed(playbackCount); ++i) {
+        ma_device_info info = playback[i];
+        
+        outputs.push_back({
+            .id = info.id,
+            .name = info.name,
+        });
     }
-    else if (numDevices == 0) {
-        std::cerr << "ERROR: Pa_CountDevices returned 0 (zero)." << std::endl;
-        return false;
+
+    for (int i = 0; i < signed(captureCount); ++i) {
+        ma_device_info info = capture[i];
+        
+        inputs.push_back({
+            .id = info.id,
+            .name = info.name,
+        });
     }
 
-    const PaDeviceInfo * info;
-
-    for (int id = 0; id < numDevices; ++id) {
-        info = Pa_GetDeviceInfo(id);
-
-        if (info->maxInputChannels > 0) {
-            inputs.push_back({
-                .id = id,
-                .name = info->name,
-            });
-        }
-
-        if (info->maxOutputChannels > 0) {
-            outputs.push_back({
-                .id = id,
-                .name = info->name
-            });
-        }
-    }
-    
     if (inputs.empty()) {
-        std::cout << "No input devices found." << std::endl;
+        L_WARN("No input devices found.");
     }
 
     if (outputs.empty()) {
-        std::cout << "No output devices found." << std::endl;
+        L_WARN("No output devices found.");
     }
 
     return true;
 }
 
-const std::vector<AudioDevice> & AudioDevices::getInputs() const {
+const rpm::vector<AudioDevice> & AudioDevices::getInputs() const {
     return inputs;
 }
 
-const std::vector<AudioDevice> & AudioDevices::getOutputs() const {
+const rpm::vector<AudioDevice> & AudioDevices::getOutputs() const {
     return outputs;
 }
 
-PaDeviceIndex AudioDevices::getDefaultInputDevice() const {
-    PaDeviceIndex ind = Pa_GetDefaultInputDevice();
-    if (ind == paNoDevice) {
-        std::cout << "No default input device found." << std::endl;
-        return inputs.front().id;
-    }
-    return ind;
-}

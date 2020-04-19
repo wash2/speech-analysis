@@ -7,11 +7,11 @@
 
 #include <Eigen/Core>
 #include <mutex>
-#include <vector>
+#include "rpmalloc.h"
 
 class RingBuffer {
 public:
-    explicit RingBuffer(int capacity = 0);
+    RingBuffer(int capacity = 0);
 
     void writeInto(const Eigen::ArrayXd & in);
     void readFrom(Eigen::ArrayXd & out);
@@ -20,7 +20,7 @@ public:
 
 private:
     int capacity, writeCursor;
-    std::vector<double> data;
+    rpm::vector<double> data;
     std::mutex mut;
 };
 

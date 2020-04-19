@@ -1,18 +1,12 @@
 #!/bin/bash
 
-unset `env | \
-    grep -vi '^EDITOR=\|^HOME=\|^LANG=\|OSXCROSS\|^PATH=\|^BUILD_WINDOWS=\|^EXE_WINDOWS=' | \
-    grep -vi 'PKG_CONFIG\|PROXY\|^PS1=\|^TERM=' | \
-    cut -d '=' -f1 | tr '\n' ' '`
-export PATH=$OSXCROSS/target/bin:$PATH
+BUILD_DIR=/tmp/speech-analysis/osx
 
-export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+mkdir -p $BUILD_DIR
 
-export CROSS=i386-apple-darwin17-
+[[ -t 1 ]] && it_param=-it
 
-mkdir -p cmake-build-release-osx
-cd cmake-build-release-osx
-
-${CROSS}cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j 4
-
+docker rm -f extract-osx >/dev/null 2>&1
+docker run --name extract-osx -v "$(pwd)":/src -v $BUILD_DIR:/build -e "CMAKE_BUILD_TYPE=$1" $it_param clorika/osx:latest
+docker cp extract-osx:/build/speech_analysis/src/main-build/speech_analysis ./out.OSX
+docker rm -f extract-osx
